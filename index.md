@@ -1,37 +1,82 @@
-## Welcome to GitHub Pages
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="x-ua-compatible" content="ie=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, minimum-scale=1">
+<title>Accountkit</title>
+</head>
+<body>
 
-You can use the [editor on GitHub](https://github.com/sujaychandraofficial/facebookphoneauth.github.io/edit/master/index.md) to maintain and preview the content for your website in Markdown files.
+<script src="https://sdk.accountkit.com/en_US/sdk.js"></script>
+<script>
+  // awaitPostMessage() This is needed as window.postMessage is not working gracefully for android
+function awaitPostMessage() {
+  var isReactNativePostMessageReady = !!window.originalPostMessage;
+  var queue = [];
+  var currentPostMessageFn = function store(message) {
+    if (queue.length > 100) queue.shift();
+    queue.push(message);
+  };
+  if (!isReactNativePostMessageReady) {
+    var originalPostMessage = window.postMessage;
+    Object.defineProperty(window, 'postMessage', {
+      configurable: true,
+      enumerable: true,
+      get: function () {
+        return currentPostMessageFn;
+      },
+      set: function (fn) {
+        currentPostMessageFn = fn;
+        isReactNativePostMessageReady = true;
+        setTimeout(sendQueue, 0);
+      }
+    });
+    window.postMessage.toString = function () {
+      return String(originalPostMessage);
+    };
+  }
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+  function sendQueue() {
+    while (queue.length > 0) window.postMessage(queue.shift());
+  }
+}
 
-### Markdown
+awaitPostMessage();       
+function loadAccountKit()
+  {
+    AccountKit.init(
+    {
+        appId: 533770340330052,
+        state: new Date().getTime(), // This should be your XSRF_TOKEN
+        version: "v1.1",
+        display: "modal",
+        debug: true,  // Helps in understanding what went wrong.
+        fbAppEventsEnabled: true
+    }
+);
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
 
-```markdown
-Syntax highlighted code block
+AccountKit.login('PHONE', {},
+    function (response) {
+        if (response.status === "PARTIALLY_AUTHENTICATED") {
+            window.postMessage(JSON.stringify({loggedIn:true}))
+        }
+        else if (response.status === "NOT_AUTHENTICATED") {
+            // handle authentication failure
+        }
+        else if (response.status === "BAD_PARAMS") {
+            // handle bad parameters
+        }
+    }
+);
+}
+ 
+  setTimeout(loadAccountKit,1000)
+  
+</script>
+</body>
+</html>
 
-# Header 1
-## Header 2
-### Header 3
 
-- Bulleted
-- List
 
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/sujaychandraofficial/facebookphoneauth.github.io/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
